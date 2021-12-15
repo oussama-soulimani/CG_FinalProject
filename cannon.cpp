@@ -12,6 +12,9 @@ using namespace std;
 
 void cannon::fireCannon(particle particles[], int NumParticles)
 {
+    float r = 1.0 * (rand() / (float)RAND_MAX);
+    float g = 1.0 * (rand() / (float)RAND_MAX);
+    float b = 1.0 * (rand() / (float)RAND_MAX);
     for (int i = 0; i < NumParticles; i = i + 1)
     {
         particles[i].width = 0.3 * (rand() / (float)RAND_MAX) + 1.0;
@@ -21,9 +24,9 @@ void cannon::fireCannon(particle particles[], int NumParticles)
         particles[i].v_x = 10.0 * (rand() / (float)RAND_MAX) - 5.0f;
         particles[i].v_y = 30.0f;
         particles[i].v_z = 10.0 * (rand() / (float)RAND_MAX) - 5.0f;
-        particles[i].r = 1.0 * (rand() / (float)RAND_MAX);
-        particles[i].g = 1.0 * (rand() / (float)RAND_MAX);
-        particles[i].b = 1.0 * (rand() / (float)RAND_MAX);
+        particles[i].r = r;
+        particles[i].g = g;
+        particles[i].b = b;
     }
     glutGet(GLUT_ELAPSED_TIME);
 }
@@ -81,9 +84,9 @@ void cannon::explode(particle particles[], int numParticles, int style){
     else if(style==1){
         for(int i=0; i<numParticles; i++){
             x = cos(i*2*M_PI/numParticles);
-            y = sin(i*2*M_PI/numParticles);
+            z = sin(i*2*M_PI/numParticles);
             particles[i].x +=x; 
-            particles[i].y +=y;
+            particles[i].z +=z;
             if(particles[i].width>0){
                     particles[i].width -=scale_over_time;
                 }
@@ -108,7 +111,7 @@ void cannon::explode(particle particles[], int numParticles, int style){
             particles[i].z +=z;
 
             if(particles[i].width>0){
-                    particles[i].width -=scale_over_time+0.05;
+                    particles[i].width -=scale_over_time;
                 }
             if(particles[i].width<0){
                 particles[i].width = 0;
