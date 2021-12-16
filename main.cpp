@@ -6,54 +6,57 @@
 #include<iostream>
 using namespace std;
 
-float posx_init = 0.0, posy_init = 25.0, posz_init = 63.0, orientation_init = 0.0;
+float posx_init = 0.0, posy_init = 25.0, posz_init = 54.0, orientation_init = 0.0;
 float g_orientation = orientation_init; // y axis
-float g_posX = posx_init, g_posY = posy_init, g_posZ = posy_init;
-float posy = 0, randR, randG, randB;
+float g_posX = posx_init, g_posY = posy_init, g_posZ = posz_init;
 bool gravity = true;
-float firehoogte = 50.0f;
 float gravity_force = 10.0f;
-bool fired = false;//check if firework was fired
-bool running=true;//program running
-int upType = 0; //defines how the firework ascends
-int explosionStyle=0;
-float angle = 0, rotationspeed = 1;
-cannon firework;
-particle particles[1000];
 
+
+particle particles2[1000];
+cannon firework(-40.0, 0.0);
+cannon currentFirework = firework;
+int num = 0;
+
+void renderGround(){
+    glBegin(GL_QUADS);
+    glNormal3f(0.0, 1.0, 0.0);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    //Ground material
+    GLfloat matDiffuse[] = {0.01, 0.01, 0.01, 1.0};
+	GLfloat matSpecular[] = {1, 1, 1, 1.0};
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, matDiffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+	glMaterialf(GL_FRONT, GL_SHININESS, 60.0);
+
+    //split ground to small small squares
+    const GLfloat part = 0.1;
+    for (int i = -400; i < 400; ++i) {
+        for (int j = -400; j < 400; ++j) {
+            glVertex3f(j*part, 0, i*part );
+            glVertex3f((j+1)*part, 0, i*part);
+            glVertex3f((j+1)*part, 0, (i+1)*part);
+            glVertex3f(j*part, 0, (i+1)*part);
+        }
+    }
+	glEnd();
+	glFlush();
+}
 
 void update()
 {
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);   
     glLoadIdentity();
     glRotatef(g_orientation, 0.0, 1.0, 0.0); // rotate in y axis
     glTranslatef(-g_posX, -g_posY, -g_posZ);
-
+    
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
-    cout<< g_posX<<endl;
-    cout<< g_posY<<endl;
-    cout<< g_posZ<<endl;
-    cout<< g_orientation<<endl;
-    cout<<"********"<<endl;
-    glColor3f(1.0, 1.0, 1.0);
-    // cannon base
-    glBegin(GL_QUADS);
-    glVertex3f(-5.0, 0.0, -5.0);
-    glVertex3f(-5.0, 0.0, 5.0);
-    glVertex3f(5.0, 0.0, 5.0);
-    glVertex3f(5.0, 0.0, -5.0);
-    glEnd();
-    // ground plane
-    glBegin(GL_LINE_STRIP);
-    glVertex3f(-40.0, 0.0, -40.0);
-    glVertex3f(-40.0, 0.0, 40.0);
-    glVertex3f(40.0, 0.0, 40.0);
-    glVertex3f(40.0, 0.0, -40.0);
-    glVertex3f(-40.0, 0.0, -40.0);
-    glEnd();
 
-    firework.drawParticles(particles, firework.MaxParticles);
+    //Ground
+    renderGround();
+
+    currentFirework.drawParticles(currentFirework.particles, currentFirework.MaxParticles);
     glutSwapBuffers();
 }
 
@@ -82,39 +85,10 @@ void keyboard(unsigned char key, int x, int y)
         g_posZ = g_posZ + cos(g_orientation / 180.0 * M_PI);
         break;
     case 'f': // fire
-        posy = 0;
         for(int i =0; i<4; i++){
-            firework.random[i]=rand()%firework.MaxParticles;
+            currentFirework.random[i]=rand()%currentFirework.MaxParticles;
         }
-        firework.fireCannon(particles, firework.MaxParticles);
-        fired = true;
-        upType=0;
-        break;
-    case 'w':
-        posy = 0;
-        firework.fireCannon(particles, firework.MaxParticles);
-        fired = true;
-        upType = 1;
-        break;
-    case 's':
-        posy = 0;
-        firework.fireCannon(particles, firework.MaxParticles);
-        fired = true;
-        upType = 2;
-        rotationspeed = 1;
-        angle= 0;
-        break;
-    case '0':
-        explosionStyle=0;
-        break;
-    case '1':
-        explosionStyle=1;
-        break;
-    case '2':
-        explosionStyle=2;
-        break;
-    case '3':
-        explosionStyle=3;
+        currentFirework.fire(0, 0);
         break;
     case 27: //exit the program
         exit(0);
@@ -134,39 +108,52 @@ void timer(int value)
     thisTime = glutGet(GLUT_ELAPSED_TIME);
     time = (thisTime - lastTime) / 500.0;
     lastTime = thisTime;
-    for (i = 0; i < firework.MaxParticles; i = i + 1)
+    for (i = 0; i < currentFirework.MaxParticles; i = i + 1)
     {
         //gravity
-        if(gravity && fired)
-            particles[i].v_y = particles[i].v_y - gravity_force * time;
+        if(gravity && currentFirework.fired)
+            currentFirework.particles[i].v_y = currentFirework.particles[i].v_y - gravity_force * time;
 
         //straight up        
-        if(particles[i].v_y>0){
-            particles[i].y = particles[i].y + particles[i].v_y * time;
-            if(upType==1){
-                particles[i].x = 2*sin((particles[i].y)/3);
-            }else if(upType==2){
-                particles[i].x = 5*cos(angle);
-                particles[i].z = 5*sin(angle);
+        if(currentFirework.particles[i].v_y>0){
+            currentFirework.particles[i].y = currentFirework.particles[i].y + currentFirework.particles[i].v_y * time;
+            particles2[i].y += currentFirework.particles[i].v_y * time;
+            if(currentFirework.upType==1){ //wavy
+                currentFirework.particles[i].x += 2*sin((currentFirework.particles[i].y)/3);
+            }else if(currentFirework.upType==2){//circular
+                currentFirework.particles[i].x += 5*cos(currentFirework.angle);
+                currentFirework.particles[i].z += 5*sin(currentFirework.angle);
             }
         }
         
     }
-    if(upType==2){
-        angle+=rotationspeed;
-        if(rotationspeed>=0)
-            rotationspeed-=0.04;
+    if(currentFirework.upType==2){
+        currentFirework.angle+=currentFirework.rotationspeed;
+        if(currentFirework.rotationspeed>=0)
+            currentFirework.rotationspeed-=0.04;
     }
 
-    if(particles[0].v_y<0)
-        firework.explode(particles, firework.MaxParticles, explosionStyle);
-
+    if(currentFirework.particles[0].v_y<0){
+        currentFirework.explode(currentFirework.particles, currentFirework.MaxParticles, currentFirework.explosionStyle);
+        if(currentFirework.particles[0].width<=0){
+            int s1 = rand()%3;
+            int s2 = rand()%3;                
+            cannon firework((rand()%81)-40, (rand()%81)-40);
+            currentFirework = firework;
+            currentFirework.fire(s1, s2);
+        }
+    }
     glutPostRedisplay();
     glutTimerFunc(50, &timer, 0);
 }
 
 int main(int argc, char *argv[])
 {
+    cout<<"\n\n*****************************"<<endl;
+    cout<<"Name: Oussama Soulimani"<<endl;
+    cout<<"S2439379"<<endl;
+    cout<<"*****************************\n"<<endl;
+    cout<<"Press f to start the show and esc to stop it."<<endl;
     srand(time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE);

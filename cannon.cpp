@@ -18,9 +18,9 @@ void cannon::fireCannon(particle particles[], int NumParticles)
     for (int i = 0; i < NumParticles; i = i + 1)
     {
         particles[i].width = 0.3 * (rand() / (float)RAND_MAX) + 1.0;
-        particles[i].x = 0.0;
+        particles[i].x = cannonPosX;
         particles[i].y = 0.0;
-        particles[i].z = 0.0;
+        particles[i].z = cannonPosZ;
         particles[i].v_x = 10.0 * (rand() / (float)RAND_MAX) - 5.0f;
         particles[i].v_y = 30.0f;
         particles[i].v_z = 10.0 * (rand() / (float)RAND_MAX) - 5.0f;
@@ -54,12 +54,46 @@ void cannon::drawParticles(particle particles[], int NumParticles)
         // triangle 4 (bottom)
         glVertex3f(0.0, 0.0, -0.5); // B again
         glEnd();
+        glDisable(GL_LIGHTING);
         glPopMatrix();
     }
+}
+
+void cannon::fire(int UpType, int expStyle){
+    fireCannon(particles, MaxParticles);
+    upType = UpType;
+    fired = true;
+    angle = 0;
+    rotationspeed = 1;
+    explosionStyle=expStyle;
 }
 void cannon::explode(particle particles[], int numParticles, int style){
     float x=0, y=0, z=0;
     //generate sphere that gets bigger to simulate explosion
+    //light Source
+    if(particles[0].width>0){
+        GLfloat mbientLight[]	= {0.2, 0.2, 0.2, 1.0};
+        GLfloat diffuseLight[]	= {0.8, 0.8, 0.8, 1.0};
+        //Intesity is relative to size of particles
+        GLfloat specularLight[]	= {particles[0].r*particles[0].width*5, particles[0].g*particles[0].width*5, particles[0].b*particles[0].width*5, 1.0};
+        GLfloat spot_direction[] = { 0.0, -1.0, 0.0 };
+        
+        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 5000);
+        glLightfv(GL_LIGHT0, GL_AMBIENT, mbientLight);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 45.0);
+        glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spot_direction);
+        glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+
+    }
+    else{
+        glDisable(GL_LIGHT0);
+
+    }
     float circleAngle;
     if(style==0){
         for(int i=0; i<sqrt(numParticles); i++){
@@ -77,6 +111,7 @@ void cannon::explode(particle particles[], int numParticles, int style){
                 }
                 if(particles[index].width<0){
                     particles[index].width = 0;
+                    particles[i].v_y=0.0;
                 }
             }
         }
@@ -92,6 +127,8 @@ void cannon::explode(particle particles[], int numParticles, int style){
                 }
             if(particles[i].width<0){
                 particles[i].width = 0;
+                particles[i].v_y=0.0;
+
             }
         }
     }   
@@ -115,6 +152,7 @@ void cannon::explode(particle particles[], int numParticles, int style){
                 }
             if(particles[i].width<0){
                 particles[i].width = 0;
+                particles[i].v_y=0.0;
             }
         }
     }else if(style==3){
@@ -140,7 +178,6 @@ void cannon::explode(particle particles[], int numParticles, int style){
                 }
                     if(particles[index].width<0){
                         particles[index].width = 0;
-                        cout<<"yes"<<endl;
                         if(index==random[0] && index==random[1] && index==random[2] && index==random[3]){
                             for(int k=0; k<25; k++){
                                 particles2[k].x = particles[index].x;
