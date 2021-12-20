@@ -140,8 +140,11 @@ void cannon::explode(particle particles[], int numParticles, int style){
                 y = x;
             }else if(i%3==1){
                 y=-x;
-            }else{
-                y=-z;
+            }
+            else{
+                z = cos(i*2*M_PI/numParticles);
+                y = sin(i*2*M_PI/numParticles);
+                x=0;
             }
             particles[i].x +=x; 
             particles[i].y +=y;

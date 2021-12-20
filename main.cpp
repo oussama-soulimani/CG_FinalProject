@@ -29,14 +29,14 @@ void renderGround(){
 	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
 	glMaterialf(GL_FRONT, GL_SHININESS, 60.0);
 
-    //split ground to small small squares
+    //split ground to small squares
     const GLfloat part = 0.1;
     for (int i = -400; i < 400; ++i) {
         for (int j = -400; j < 400; ++j) {
-            glVertex3f(j*part, 0, i*part );
-            glVertex3f((j+1)*part, 0, i*part);
-            glVertex3f((j+1)*part, 0, (i+1)*part);
             glVertex3f(j*part, 0, (i+1)*part);
+            glVertex3f((j+1)*part, 0, (i+1)*part);
+            glVertex3f((j+1)*part, 0, i*part);
+            glVertex3f(j*part, 0, i*part );
         }
     }
 	glEnd();
