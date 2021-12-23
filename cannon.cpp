@@ -5,13 +5,45 @@
 #include <time.h>
 #include <iostream>
 #include"cannon.h"
-
+#include "audio.h"
 using namespace std;
 
 
 
+
+        int cannon::getMaxParticles(){
+            return MaxParticles;
+        }
+        bool cannon::getFired(){
+            return fired;
+        }
+        float cannon::getAngle(){
+            return angle;
+        }
+        void cannon::setAngle(float Angle){
+            angle = Angle;
+        }
+        int cannon::getUpType(){
+            return upType;
+        }
+        int cannon::getExplosionStyle(){
+            return explosionStyle;
+        }
+        void cannon::setExplosionStyle(int style){
+            explosionStyle = style;
+        }
+        float cannon::getRotationSpeed(){
+            return rotationspeed;
+        }
+        void cannon::setRotationSpeed(float rotSpeed){
+            rotationspeed = rotSpeed;
+        }
+
+
 void cannon::fireCannon(particle particles[], int NumParticles)
-{
+{   
+    playSound("rising.wav", SDL_MIX_MAXVOLUME);
+    playExplosionSound = true;
     float r = 1.0 * (rand() / (float)RAND_MAX);
     float g = 1.0 * (rand() / (float)RAND_MAX);
     float b = 1.0 * (rand() / (float)RAND_MAX);
@@ -65,19 +97,28 @@ void cannon::fire(int UpType, int expStyle){
     fired = true;
     angle = 0;
     rotationspeed = 1;
-    explosionStyle=expStyle;
+    setExplosionStyle(expStyle);
 }
 void cannon::explode(particle particles[], int numParticles, int style){
     float x=0, y=0, z=0;
     //generate sphere that gets bigger to simulate explosion
     //light Source
     if(particles[0].width>0){
+        if(playExplosionSound){
+            if(style==0){
+                playSound("exploding0.wav", SDL_MIX_MAXVOLUME);
+            }else if(style==1){
+                playSound("exploding1.wav", SDL_MIX_MAXVOLUME);
+            }else if(style==2){
+                playSound("exploding2.wav", SDL_MIX_MAXVOLUME);
+            }
+            playExplosionSound = false;
+        }
         GLfloat mbientLight[]	= {0.2, 0.2, 0.2, 1.0};
         GLfloat diffuseLight[]	= {0.8, 0.8, 0.8, 1.0};
         //Intesity is relative to size of particles
         GLfloat specularLight[]	= {particles[0].r*particles[0].width*5, particles[0].g*particles[0].width*5, particles[0].b*particles[0].width*5, 1.0};
         GLfloat spot_direction[] = { 0.0, -1.0, 0.0 };
-        
         glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 5000);
         glLightfv(GL_LIGHT0, GL_AMBIENT, mbientLight);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);

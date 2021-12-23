@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include "GL/glut.h"
+#include "audio.h"
 #include"cannon.h"
 #include<iostream>
 using namespace std;
@@ -56,7 +57,7 @@ void update()
     //Ground
     renderGround();
 
-    currentFirework.drawParticles(currentFirework.particles, currentFirework.MaxParticles);
+    currentFirework.drawParticles(currentFirework.particles, currentFirework.getMaxParticles());
     glutSwapBuffers();
 }
 
@@ -86,7 +87,7 @@ void keyboard(unsigned char key, int x, int y)
         break;
     case 'f': // fire
         for(int i =0; i<4; i++){
-            currentFirework.random[i]=rand()%currentFirework.MaxParticles;
+            currentFirework.random[i]=rand()%currentFirework.getMaxParticles();
         }
         currentFirework.fire(0, 0);
         break;
@@ -108,33 +109,33 @@ void timer(int value)
     thisTime = glutGet(GLUT_ELAPSED_TIME);
     time = (thisTime - lastTime) / 500.0;
     lastTime = thisTime;
-    for (i = 0; i < currentFirework.MaxParticles; i = i + 1)
+    for (i = 0; i < currentFirework.getMaxParticles(); i = i + 1)
     {
         //gravity
-        if(gravity && currentFirework.fired)
+        if(gravity && currentFirework.getFired())
             currentFirework.particles[i].v_y = currentFirework.particles[i].v_y - gravity_force * time;
 
         //straight up        
         if(currentFirework.particles[i].v_y>0){
             currentFirework.particles[i].y = currentFirework.particles[i].y + currentFirework.particles[i].v_y * time;
             particles2[i].y += currentFirework.particles[i].v_y * time;
-            if(currentFirework.upType==1){ //wavy
+            if(currentFirework.getUpType()==1){ //wavy
                 currentFirework.particles[i].x += 2*sin((currentFirework.particles[i].y)/3);
-            }else if(currentFirework.upType==2){//circular
-                currentFirework.particles[i].x += 5*cos(currentFirework.angle);
-                currentFirework.particles[i].z += 5*sin(currentFirework.angle);
+            }else if(currentFirework.getUpType()==2){//circular
+                currentFirework.particles[i].x += 5*cos(currentFirework.getAngle());
+                currentFirework.particles[i].z += 5*sin(currentFirework.getAngle());
             }
         }
         
     }
-    if(currentFirework.upType==2){
-        currentFirework.angle+=currentFirework.rotationspeed;
-        if(currentFirework.rotationspeed>=0)
-            currentFirework.rotationspeed-=0.04;
+    if(currentFirework.getUpType()==2){
+        currentFirework.setAngle(currentFirework.getAngle()+currentFirework.getRotationSpeed());
+        if(currentFirework.getRotationSpeed()>=0)
+            currentFirework.setRotationSpeed(currentFirework.getRotationSpeed()-0.04);
     }
 
     if(currentFirework.particles[0].v_y<0){
-        currentFirework.explode(currentFirework.particles, currentFirework.MaxParticles, currentFirework.explosionStyle);
+        currentFirework.explode(currentFirework.particles, currentFirework.getMaxParticles(), currentFirework.getExplosionStyle());
         if(currentFirework.particles[0].width<=0){
             int s1 = rand()%3;
             int s2 = rand()%3;                
@@ -154,6 +155,12 @@ int main(int argc, char *argv[])
     cout<<"S2439379"<<endl;
     cout<<"*****************************\n"<<endl;
     cout<<"Press f to start the show and esc to stop it."<<endl;
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+        return 1;
+    }
+    initAudio();
+    
     srand(time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE);
